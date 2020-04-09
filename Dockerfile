@@ -1,4 +1,4 @@
-FROM jenkins/ssh-slave
+FROM jenkins/ssh-slave:revert-22-jdk11-JENKINS-52279
 
 #SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sL https://deb.nodesource.com/setup_12.x | bash -
