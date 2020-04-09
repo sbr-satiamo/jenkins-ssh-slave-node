@@ -1,41 +1,13 @@
-FROM openjdk:8-jdk
-LABEL MAINTAINER="Stefan Brandner <sbr@satiamo.com>"
+FROM jenkins/ssh-slave
 
-ARG user=jenkins
-ARG group=jenkins
-ARG uid=1000
-ARG gid=1000
-ARG JENKINS_AGENT_HOME=/home/${user}
-
-ENV JENKINS_AGENT_HOME ${JENKINS_AGENT_HOME}
-
-RUN groupadd -g ${gid} ${group} \
-    && useradd -d "${JENKINS_AGENT_HOME}" -u "${uid}" -g "${gid}" -m -s /bin/bash "${user}"
-
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+#SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sL https://deb.nodesource.com/setup_12.x | bash -
 RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
 RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
 
-# setup SSH server
+
 RUN apt-get update \
-    && apt-get install --no-install-recommends -y openssh-server \
+    && apt-get install --no-install-recommends -y \
 	nodejs \
 	yarn \
-    && rm -rf /var/lib/apt/lists/*
-RUN sed -i /etc/ssh/sshd_config \
-        -e 's/#PermitRootLogin.*/PermitRootLogin no/' \
-        -e 's/#RSAAuthentication.*/RSAAuthentication yes/'  \
-        -e 's/#PasswordAuthentication.*/PasswordAuthentication no/' \
-        -e 's/#SyslogFacility.*/SyslogFacility AUTH/' \
-        -e 's/#LogLevel.*/LogLevel INFO/' && \
-    mkdir /var/run/sshd
-
-VOLUME "${JENKINS_AGENT_HOME}" "/tmp" "/run" "/var/run"
-WORKDIR "${JENKINS_AGENT_HOME}"
-
-COPY setup-sshd /usr/local/bin/setup-sshd
-
-EXPOSE 22
-
-ENTRYPOINT ["setup-sshd"]
+    && apt-get clean; rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/*
